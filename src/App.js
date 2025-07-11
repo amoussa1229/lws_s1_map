@@ -20,7 +20,7 @@ function App() {
   const [newAllianceName, setNewAllianceName] = useState('');
   const [selectedAlliance, setSelectedAlliance] = useState(null);
   const [grid, setGrid] = useState(
-    Array(GRID_SIZE * GRID_SIZE).fill(null) // store alliance index or null
+    Array(GRID_SIZE * GRID_SIZE).fill(null)
   );
   const [isMouseDown, setIsMouseDown] = useState(false);
 
@@ -28,7 +28,12 @@ function App() {
     if (selectedAlliance !== null) {
       setGrid((prevGrid) => {
         const newGrid = [...prevGrid];
-        newGrid[index] = selectedAlliance;
+        // Toggle assignment: unassign if already set to the selected alliance
+        if (newGrid[index] === selectedAlliance) {
+          newGrid[index] = null;
+        } else {
+          newGrid[index] = selectedAlliance;
+        }
         return newGrid;
       });
     }
@@ -41,7 +46,14 @@ function App() {
 
   const handleMouseEnter = (index) => {
     if (isMouseDown) {
-      applyAllianceToTile(index);
+      // No toggling on drag — only assign if different
+      setGrid((prevGrid) => {
+        const newGrid = [...prevGrid];
+        if (selectedAlliance !== null && newGrid[index] !== selectedAlliance) {
+          newGrid[index] = selectedAlliance;
+        }
+        return newGrid;
+      });
     }
   };
 
@@ -55,6 +67,10 @@ function App() {
     const color = getRandomColor(existingColors);
     setAlliances([...alliances, { name: newAllianceName.trim(), color }]);
     setNewAllianceName('');
+  };
+
+  const clearAllTiles = () => {
+    setGrid(Array(GRID_SIZE * GRID_SIZE).fill(null));
   };
 
   return (
@@ -87,6 +103,10 @@ function App() {
           </button>
         ))}
       </div>
+
+      <button onClick={clearAllTiles} style={{ marginTop: 10 }}>
+        🧹 Clear All
+      </button>
 
       <div className="grid">
         {grid.map((allianceIndex, i) => {
