@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 
 const GRID_SIZE = 10;
@@ -19,20 +19,19 @@ function App() {
   const [alliances, setAlliances] = useState([]);
   const [newAllianceName, setNewAllianceName] = useState('');
   const [selectedAlliance, setSelectedAlliance] = useState(null);
-  const [grid, setGrid] = useState(
-    Array(GRID_SIZE * GRID_SIZE).fill(null)
-  );
+  const [grid, setGrid] = useState(Array(GRID_SIZE * GRID_SIZE).fill(null));
   const [isMouseDown, setIsMouseDown] = useState(false);
+  const tileRefs = useRef([]);
+  const modifiedTilesRef = useRef(new Set());
 
-  const applyAllianceToTile = (index) => {
+  const applyAllianceToTile = (index, allowToggle = true) => {
     if (selectedAlliance !== null) {
       setGrid((prevGrid) => {
         const newGrid = [...prevGrid];
-        // Toggle assignment: unassign if already set to the selected alliance
-        if (newGrid[index] === selectedAlliance) {
-          newGrid[index] = null;
+        if (allowToggle && newGrid[index] === selectedAlliance) {
+          newGrid[index] = null; // unassign
         } else {
-          newGrid[index] = selectedAlliance;
+          newGrid[index] = selectedAlliance; // assign
         }
         return newGrid;
       });
@@ -41,24 +40,33 @@ function App() {
 
   const handleMouseDown = (index) => {
     setIsMouseDown(true);
-    applyAllianceToTile(index);
+    applyAllianceToTile(index, true);
   };
 
   const handleMouseEnter = (index) => {
     if (isMouseDown) {
-      // No toggling on drag — only assign if different
-      setGrid((prevGrid) => {
-        const newGrid = [...prevGrid];
-        if (selectedAlliance !== null && newGrid[index] !== selectedAlliance) {
-          newGrid[index] = selectedAlliance;
-        }
-        return newGrid;
-      });
+      applyAllianceToTile(index, false);
     }
   };
 
   const handleMouseUp = () => {
     setIsMouseDown(false);
+  };
+
+  const handleTouchStart = (index) => {
+    modifiedTilesRef.current = new Set(); // reset for new gesture
+    applyAllianceToTile(index, true);
+    modifiedTilesRef.current.add(index);
+  };
+
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const index = tileRefs.current.findIndex((ref) => ref === el);
+    if (index !== -1 && !modifiedTilesRef.current.has(index)) {
+      applyAllianceToTile(index, false);
+      modifiedTilesRef.current.add(index);
+    }
   };
 
   const addAlliance = () => {
@@ -74,7 +82,14 @@ function App() {
   };
 
   return (
-    <div className="App" onMouseUp={handleMouseUp}>
+    <div
+      className="App"
+      onMouseUp={handleMouseUp}
+      onTouchEnd={() => {
+        setIsMouseDown(false);
+        modifiedTilesRef.current = new Set();
+      }}
+    >
       <h2>Create a New Alliance</h2>
       <div className="alliance-form">
         <input
@@ -108,7 +123,7 @@ function App() {
         🧹 Clear All
       </button>
 
-      <div className="grid">
+      <div className="grid" onTouchMove={handleTouchMove}>
         {grid.map((allianceIndex, i) => {
           const alliance = allianceIndex !== null ? alliances[allianceIndex] : null;
           const backgroundColor = alliance ? alliance.color : DEFAULT_COLOR;
@@ -116,10 +131,12 @@ function App() {
           return (
             <div
               key={i}
+              ref={(el) => (tileRefs.current[i] = el)}
               className="tile"
               title={title}
               onMouseDown={() => handleMouseDown(i)}
               onMouseEnter={() => handleMouseEnter(i)}
+              onTouchStart={() => handleTouchStart(i)}
               style={{ backgroundColor }}
             />
           );
@@ -130,4 +147,3 @@ function App() {
 }
 
 export default App;
-
