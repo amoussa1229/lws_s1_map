@@ -22,13 +22,31 @@ function App() {
   const [grid, setGrid] = useState(
     Array(GRID_SIZE * GRID_SIZE).fill(DEFAULT_COLOR)
   );
+  const [isMouseDown, setIsMouseDown] = useState(false);
 
-  const handleTileClick = (index) => {
+  const applyColorToTile = (index) => {
     if (selectedAlliance !== null) {
-      const newGrid = [...grid];
-      newGrid[index] = alliances[selectedAlliance].color;
-      setGrid(newGrid);
+      setGrid((prevGrid) => {
+        const newGrid = [...prevGrid];
+        newGrid[index] = alliances[selectedAlliance].color;
+        return newGrid;
+      });
     }
+  };
+
+  const handleMouseDown = (index) => {
+    setIsMouseDown(true);
+    applyColorToTile(index);
+  };
+
+  const handleMouseEnter = (index) => {
+    if (isMouseDown) {
+      applyColorToTile(index);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsMouseDown(false);
   };
 
   const addAlliance = () => {
@@ -40,7 +58,10 @@ function App() {
   };
 
   return (
-    <div className="App">
+    <div
+      className="App"
+      onMouseUp={handleMouseUp} // stop painting anywhere on the page
+    >
       <h2>Create a New Alliance</h2>
       <div className="alliance-form">
         <input
@@ -75,7 +96,8 @@ function App() {
           <div
             key={i}
             className="tile"
-            onClick={() => handleTileClick(i)}
+            onMouseDown={() => handleMouseDown(i)}
+            onMouseEnter={() => handleMouseEnter(i)}
             style={{ backgroundColor: color }}
           />
         ))}

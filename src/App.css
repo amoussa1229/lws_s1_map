@@ -1,3 +1,7 @@
+.App {
+  user-select: none;
+}
+
 .alliance-form {
   margin-bottom: 15px;
 }
