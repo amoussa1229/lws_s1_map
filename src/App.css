@@ -1,3 +1,25 @@
+.alliance-form {
+  margin-bottom: 15px;
+}
+
+.alliance-form input {
+  padding: 8px;
+  margin-right: 10px;
+  width: 200px;
+}
+
+.alliance-form button {
+  padding: 8px 12px;
+  background-color: #444;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.alliance-form button:hover {
+  background-color: #222;
+}
+
 .App {
   padding: 20px;
 }
